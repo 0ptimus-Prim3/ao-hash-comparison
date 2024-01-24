@@ -223,10 +223,9 @@ std::string hexdump(const std::array<T, sz> &it, bool up = false, bool rev = fal
 }
 #endif
 
-template<typename Field, std::enable_if_t<field_kind<Field>() != FieldKind::UNKNOWN> * = nullptr>
-std::string hexdump(const Field &x, bool up = false, bool rev = false, size_t space = 0)
+std::string hexdump(const libff::Fr<libff::default_ec_pp> &x, bool up = false, bool rev = false, size_t space = 0)
 {
-    std::array<uint8_t, field_size<Field>()> buff{};
+    std::array<uint8_t, field_size<libff::Fr<libff::default_ec_pp>>()> buff{};
 
     field_store(buff.data(), x);
 

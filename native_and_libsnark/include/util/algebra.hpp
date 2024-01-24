@@ -6,32 +6,6 @@
 #include <libff/common/default_types/ec_pp.hpp>
 #include <utility>
 
-enum class FieldKind
-{
-    UNKNOWN,
-    LIBFF,
-};
-
-template<typename FieldT,
-         std::enable_if_t<std::is_same_v<std::decay_t<FieldT>,
-                                         libff::Fp_model<std::decay_t<FieldT>::num_limbs,
-                                                         std::decay_t<FieldT>::mod>>> * = nullptr>
-constexpr FieldKind field_kind()
-{
-    return FieldKind::LIBFF;
-}
-
-template<typename FieldT>
-constexpr const char *field_kind_name()
-{
-    constexpr FieldKind kind = field_kind<FieldT>();
-
-    if constexpr (kind == FieldKind::LIBFF)
-        return "libff";
-    else
-        static_assert(false, "Invalid field type");
-}
-
 template<typename FieldT>
 constexpr void field_init()
 {
@@ -48,48 +22,33 @@ constexpr void field_init()
 template<typename FieldT>
 constexpr size_t field_size()
 {
-    constexpr FieldKind kind = field_kind<FieldT>();
-
-    if constexpr (kind == FieldKind::LIBFF)
-        return FieldT::num_limbs * sizeof(mp_limb_t);
+    return FieldT::num_limbs * sizeof(mp_limb_t);
 }
 
 template<typename FieldT>
 FieldT field_load(const void *src)
 {
     static constexpr size_t FIELD_SIZE = field_size<FieldT>();
-    static constexpr FieldKind kind = field_kind<FieldT>();
 
-    if constexpr (kind == FieldKind::LIBFF)
-    {
-        mpz_class tmp;
+    mpz_class tmp;
 
-        mpz_import(tmp.get_mpz_t(), FIELD_SIZE / sizeof(mp_limb_t), -1, sizeof(mp_limb_t), 0, 0,
-                   src);
+    mpz_import(tmp.get_mpz_t(), FIELD_SIZE / sizeof(mp_limb_t), -1, sizeof(mp_limb_t), 0, 0,
+                src);
 
-        return FieldT{tmp.get_mpz_t()};
-    }
-    else
-        static_assert(false, "Invalid field type");
+    return FieldT{tmp.get_mpz_t()};
 }
 
 template<typename FieldT>
 void field_store(void *dst, const FieldT &src)
 {
     static constexpr size_t FIELD_SIZE = field_size<FieldT>();
-    static constexpr FieldKind kind = field_kind<FieldT>();
 
     memset(dst, 0, FIELD_SIZE);
 
-    if constexpr (kind == FieldKind::LIBFF)
-    {
-        mpz_class tmp;
+    mpz_class tmp;
 
-        src.as_bigint().to_mpz(tmp.get_mpz_t());
-        mpz_export(dst, NULL, -1, sizeof(mp_limb_t), 0, 0, tmp.get_mpz_t());
-    }
-    else
-        static_assert(false, "Invalid field type");
+    src.as_bigint().to_mpz(tmp.get_mpz_t());
+    mpz_export(dst, NULL, -1, sizeof(mp_limb_t), 0, 0, tmp.get_mpz_t());
 }
 
 template<typename Field>
@@ -117,19 +76,13 @@ void field_store(void *dst, const FieldT *src, size_t n)
 template<typename Field>
 Field field_inverse(const Field &x)
 {
-    constexpr FieldKind kind = field_kind<Field>();
-
-    if constexpr (kind == FieldKind::LIBFF)
-        return x.inverse();
+    return x.inverse();
 }
 
 template<typename Field>
 constexpr Field field_random()
 {
-    constexpr FieldKind kind = field_kind<Field>();
-
-    if constexpr (kind == FieldKind::LIBFF)
-        return Field::random_element();
+    return Field::random_element();
 }
 
 template<typename FieldT>

@@ -68,12 +68,7 @@ template<typename Hash>
 void bench(const char *name)
 {
     static constexpr size_t RATIO = Hash::BLOCK_SIZE / Hash::DIGEST_SIZE;
-    static const char *KIND_NAME;
-
-    if constexpr (std::is_same_v<Hash, Sha256>)
-        KIND_NAME = "None";
-    else
-        KIND_NAME = field_kind_name<typename Hash::Field>();
+    static const char *KIND_NAME = "";
 
     log_file << name << ' ' << KIND_NAME << " (" << RATIO << ":1), r = " << Hash::ROUNDS_N << '\n';
     log_file << table_header << '\n';
